@@ -115,3 +115,62 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.5); }
+
+/* ── Print / PDF styles ────────────────────────────────────────────────────── */
+@media print {
+  /* Color-scheme so browser uses dark backgrounds */
+  :root { color-scheme: dark; }
+
+  /* Hide chrome that doesn't belong in a PDF */
+  nav,
+  .stars-bg,
+  .glow-orb,
+  .btn-shimmer::after,
+  button { display: none !important; }
+
+  /* Reset layout */
+  body {
+    background: #030014 !important;
+    color: #e2e8f0 !important;
+    font-size: 11pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Force dark backgrounds on glass cards */
+  .glass,
+  .glass-md,
+  .glass-strong {
+    background: #1a1a2e !important;
+    border: 1px solid #4b5563 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  /* Gradient text fallback (print can't -webkit-text-fill-color well) */
+  .text-gradient {
+    -webkit-text-fill-color: #a78bfa !important;
+    color: #a78bfa !important;
+  }
+
+  /* Keep charts from being clipped */
+  svg { overflow: visible !important; }
+
+  /* Section page breaks */
+  section { break-inside: avoid; page-break-inside: avoid; }
+
+  /* Full-width single column */
+  .grid { display: block !important; }
+  .grid > * { width: 100% !important; margin-bottom: 1rem; }
+
+  /* Expand width */
+  .max-w-6xl { max-width: 100% !important; }
+  .px-4, .px-6 { padding-left: 0 !important; padding-right: 0 !important; }
+  .pt-24 { padding-top: 0.5rem !important; }
+
+  /* Hide action toolbar (export/share/re-run form) */
+  .flex.flex-wrap.items-center.justify-center.gap-3,
+  form { display: none !important; }
+}

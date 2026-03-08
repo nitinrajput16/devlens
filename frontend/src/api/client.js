@@ -50,4 +50,14 @@ export async function uploadResume(file) {
   return resp.data // { resume_id, skills, projects, experience_level, summary }
 }
 
+export async function updateProfile(data) {
+  const resp = await api.put('/auth/me', data)
+  return resp.data
+}
+
+export async function getHistory() {
+  const resp = await api.get('/history')
+  return resp.data
+}
+
 export default api

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'react-router-dom'
-import html2pdf from 'html2pdf.js'
+
 import { getResults, rerunGapAnalysis } from '../api/client'
 import SkillRadar from '../components/SkillRadar'
 import SkillReadinessBar from '../components/SkillReadinessBar'
@@ -64,7 +64,6 @@ export default function Results() {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
-  const [exporting, setExporting] = useState(false)
   const [roleInput, setRoleInput] = useState('')
   const [rerunning, setRerunning] = useState(false)
   const [rerunError, setRerunError] = useState('')
@@ -82,24 +81,9 @@ export default function Results() {
 
   useEffect(() => { fetchResults() }, [sessionId])
 
-  // ── PDF export ────────────────────────────────────────────────────────────
-  const handleExport = async () => {
-    if (!printRef.current || exporting) return
-    setExporting(true)
-    try {
-      await html2pdf()
-        .set({
-          margin: 0.5,
-          filename: `devlens-${sessionId.slice(0, 8)}.pdf`,
-          image: { type: 'jpeg', quality: 0.95 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#111827' },
-          jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
-        })
-        .from(printRef.current)
-        .save()
-    } finally {
-      setExporting(false)
-    }
+  // ── PDF export (browser print) ──────────────────────────────────────────
+  const handleExport = () => {
+    window.print()
   }
 
   // ── Share / copy link ─────────────────────────────────────────────────────
@@ -171,10 +155,9 @@ export default function Results() {
       <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
         <button
           onClick={handleExport}
-          disabled={exporting}
-          className="flex items-center gap-2 px-4 py-2 glass rounded-xl text-sm font-medium hover:bg-white/[0.06] transition disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 glass rounded-xl text-sm font-medium hover:bg-white/[0.06] transition"
         >
-          {exporting ? <><Spinner />Exporting…</> : <><DownloadIcon />Export PDF</>}
+          <DownloadIcon />Export PDF
         </button>
         <button
           onClick={handleShare}

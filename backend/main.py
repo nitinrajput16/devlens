@@ -98,35 +98,45 @@ async def run_analysis_pipeline(session_id: str, request: AnalyseRequest):
         for url in (request.custom_urls or []):
             scrape_tasks[f"custom_{url[:30]}"] = scrape_custom_url(url)
 
-        platform_signals = []
-        progress = {}
-
-        for name, coro in scrape_tasks.items():
-            platform_key = name.split("_")[0] if name.startswith("custom_") else name
-            progress[platform_key] = "scraping"
+        # ── Mark all platforms as "scraping" up-front ──
+        if scrape_tasks:
             await sessions_collection.update_one(
                 {"session_id": session_id},
-                {"$set": {f"progress.{platform_key}": "scraping"}},
+                {"$set": {
+                    f"progress.{(n.split('_')[0] if n.startswith('custom_') else n)}": "scraping"
+                    for n in scrape_tasks
+                }},
             )
+
+        # ── Run all scrapers concurrently ──
+        async def _run_scraper(name: str, coro):
+            platform_key = name.split("_")[0] if name.startswith("custom_") else name
             try:
                 result = await coro
-                platform_signals.append(result)
-                progress[platform_key] = "done"
+                await sessions_collection.update_one(
+                    {"session_id": session_id},
+                    {"$set": {f"progress.{platform_key}": "done"}},
+                )
+                return result
             except Exception as e:
-                platform_signals.append({
+                await sessions_collection.update_one(
+                    {"session_id": session_id},
+                    {
+                        "$set": {f"progress.{platform_key}": "error"},
+                        "$push": {"errors": f"{platform_key}: {e}"},
+                    },
+                )
+                return {
                     "platform": platform_key,
                     "skills": [], "projects": [], "metrics": {}, "raw_data": {},
                     "error": str(e),
-                })
-                progress[platform_key] = "error"
-                await sessions_collection.update_one(
-                    {"session_id": session_id},
-                    {"$push": {"errors": f"{platform_key}: {e}"}},
-                )
-            await sessions_collection.update_one(
-                {"session_id": session_id},
-                {"$set": {f"progress.{platform_key}": progress[platform_key]}},
+                }
+
+        platform_signals = list(
+            await asyncio.gather(
+                *[_run_scraper(name, coro) for name, coro in scrape_tasks.items()]
             )
+        )
 
         # If a pre-uploaded resume exists inject it as a platform signal
         if request.resume_id:
@@ -210,11 +220,11 @@ async def run_analysis_pipeline(session_id: str, request: AnalyseRequest):
                 else:
                     queries.append("software developer")
 
-                # Fetch jobs from multiple queries and deduplicate
+                # Fetch jobs from multiple queries in parallel and deduplicate
+                fetched_lists = await asyncio.gather(*[fetch_jobs(q) for q in queries])
                 all_jobs = []
                 seen_ids = set()
-                for q in queries:
-                    fetched = await fetch_jobs(q)
+                for fetched in fetched_lists:
                     for job in fetched:
                         jid = job.get("job_id") or job.get("job_title", "") + job.get("employer_name", "")
                         if jid not in seen_ids:
@@ -272,6 +282,39 @@ async def api_me(user=Depends(require_user)):
     return {"name": user["name"], "email": user["email"], "provider": user.get("provider", "email")}
 
 
+@app.put("/api/auth/me")
+async def api_update_me(data: dict, user=Depends(require_user)):
+    """Update authenticated user's display name."""
+    name = (data.get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+    await users_collection.update_one(
+        {"email": user["email"]},
+        {"$set": {"name": name}},
+    )
+    return {"name": name, "email": user["email"], "provider": user.get("provider", "email")}
+
+
+@app.get("/api/history")
+async def api_history(user=Depends(require_user)):
+    """Return the 50 most recent sessions belonging to the authenticated user."""
+    cursor = sessions_collection.find(
+        {"user_id": str(user["_id"])},
+    ).sort("created_at", -1).limit(50)
+    sessions = await cursor.to_list(length=50)
+    result = []
+    for s in sessions:
+        s.pop("_id", None)
+        result.append({
+            "session_id": s["session_id"],
+            "status": s["status"],
+            "target_role": s.get("target_role"),
+            "created_at": s.get("created_at"),
+            "platforms": list(s.get("progress", {}).keys()),
+        })
+    return result
+
+
 # ── Routes ──
 
 @app.get("/")
@@ -311,12 +354,13 @@ async def upload_resume(file: UploadFile = File(...)):
 
 
 @app.post("/api/analyse", response_model=AnalyseResponse)
-async def analyse(request: AnalyseRequest, background_tasks: BackgroundTasks):
+async def analyse(request: AnalyseRequest, background_tasks: BackgroundTasks, user=Depends(get_current_user)):
     """Accept profile URLs, create a session, and start background analysis."""
     session_id = str(uuid.uuid4())
 
     session_doc = {
         "session_id": session_id,
+        "user_id": str(user["_id"]) if user else None,
         "status": "pending",
         "input_urls": request.model_dump(),
         "target_role": request.target_role,

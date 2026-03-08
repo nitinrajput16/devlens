@@ -5,6 +5,7 @@ import Landing from './pages/Landing'
 import Home from './pages/Home'
 import Loading from './pages/Loading'
 import Results from './pages/Results'
+import Profile from './pages/Profile'
 import GoogleCallback from './pages/GoogleCallback'
 import GitHubCallback from './pages/GitHubCallback'
 
@@ -35,6 +36,14 @@ function AppRoutes() {
           />
           <Route path="/loading/:sessionId" element={<Loading />} />
           <Route path="/results/:sessionId" element={<Results />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
           <Route path="/auth/github/callback" element={<GitHubCallback />} />
         </Routes>

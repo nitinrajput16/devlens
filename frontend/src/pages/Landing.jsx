@@ -19,6 +19,156 @@ function FadeUp({ children, delay = 0, className = '' }) {
   )
 }
 
+// ── Mini Skill Radar (SVG polygon) ───────────────────────────────────────────
+function MiniRadar() {
+  const skills = [
+    { label: 'React', value: 0.85 },
+    { label: 'Python', value: 0.72 },
+    { label: 'SQL', value: 0.60 },
+    { label: 'Node', value: 0.78 },
+    { label: 'Docker', value: 0.50 },
+    { label: 'ML', value: 0.65 },
+  ]
+  const cx = 70, cy = 70, r = 52
+  const n = skills.length
+  const angleStep = (2 * Math.PI) / n
+  const toXY = (i, frac) => {
+    const a = i * angleStep - Math.PI / 2
+    return [cx + frac * r * Math.cos(a), cy + frac * r * Math.sin(a)]
+  }
+  const outerPoints = skills.map((_, i) => toXY(i, 1).join(',')).join(' ')  // used for grid ring at frac=1
+  const dataPoints = skills.map((s, i) => toXY(i, s.value).join(',')).join(' ')
+  return (
+    <svg viewBox="0 0 140 140" className="w-full h-full">
+      {/* Grid rings */}
+      {[0.33, 0.66, 1].map(frac => (
+        <polygon
+          key={frac}
+          points={skills.map((_, i) => toXY(i, frac).join(',')).join(' ')}
+          fill="none"
+          stroke="rgba(139,92,246,0.15)"
+          strokeWidth="1"
+        />
+      ))}
+      {/* Spokes */}
+      {skills.map((_, i) => {
+        const [x, y] = toXY(i, 1)
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(139,92,246,0.2)" strokeWidth="1" />
+      })}
+      {/* Data polygon */}
+      <motion.polygon
+        points={dataPoints}
+        fill="rgba(139,92,246,0.25)"
+        stroke="#a78bfa"
+        strokeWidth="1.5"
+        initial={{ opacity: 0, scale: 0.4 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+        style={{ transformOrigin: `${cx}px ${cy}px` }}
+      />
+      {/* Dots */}
+      {skills.map((s, i) => {
+        const [x, y] = toXY(i, s.value)
+        return <circle key={i} cx={x} cy={y} r="2.5" fill="#c084fc" />
+      })}
+      {/* Labels */}
+      {skills.map((s, i) => {
+        const [x, y] = toXY(i, 1.22)
+        return (
+          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="middle"
+            fontSize="8" fill="#9ca3af">{s.label}</text>
+        )
+      })}
+    </svg>
+  )
+}
+
+// ── Mini Readiness Gauge (arc) ───────────────────────────────────────────────
+function MiniGauge() {
+  const score = 74
+  const r = 42, cx = 70, cy = 72
+  const startAngle = -200, endAngle = 20   // degrees
+  const toRad = d => (d * Math.PI) / 180
+  const arcPath = (from, to) => {
+    const x1 = cx + r * Math.cos(toRad(from))
+    const y1 = cy + r * Math.sin(toRad(from))
+    const x2 = cx + r * Math.cos(toRad(to))
+    const y2 = cy + r * Math.sin(toRad(to))
+    const large = to - from > 180 ? 1 : 0
+    return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`
+  }
+  const totalDeg = endAngle - startAngle          // 220°
+  const filledDeg = (score / 100) * totalDeg
+  return (
+    <svg viewBox="0 0 140 100" className="w-full h-full">
+      {/* Track */}
+      <path d={arcPath(startAngle, endAngle)} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" strokeLinecap="round" />
+      {/* Fill */}
+      <motion.path
+        d={arcPath(startAngle, startAngle + filledDeg)}
+        fill="none"
+        stroke="url(#gaugeGrad)"
+        strokeWidth="8"
+        strokeLinecap="round"
+        initial={{ pathLength: 0 }}
+        whileInView={{ pathLength: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1.2, delay: 0.2, ease: 'easeOut' }}
+      />
+      <defs>
+        <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#a78bfa" />
+        </linearGradient>
+      </defs>
+      {/* Score text */}
+      <text x={cx} y={cy - 2} textAnchor="middle" fontSize="18" fontWeight="700" fill="#e2e8f0">{score}</text>
+      <text x={cx} y={cy + 13} textAnchor="middle" fontSize="8" fill="#9ca3af">/ 100</text>
+    </svg>
+  )
+}
+
+// ── Mini Gap Bars ─────────────────────────────────────────────────────────────
+function MiniGapBars() {
+  const bars = [
+    { label: 'Kubernetes', pct: 82, color: '#ef4444' },
+    { label: 'TypeScript', pct: 55, color: '#f97316' },
+    { label: 'FastAPI',    pct: 38, color: '#eab308' },
+    { label: 'GraphQL',   pct: 20, color: '#22c55e' },
+  ]
+  return (
+    <svg viewBox="0 0 140 100" className="w-full h-full">
+      {bars.map((b, i) => {
+        const y = 10 + i * 22
+        const maxW = 80
+        return (
+          <g key={b.label}>
+            <text x="0" y={y + 7} fontSize="7.5" fill="#9ca3af">{b.label}</text>
+            {/* Track */}
+            <rect x="55" y={y} width={maxW} height="9" rx="4" fill="rgba(255,255,255,0.05)" />
+            {/* Bar */}
+            <motion.rect
+              x="55" y={y}
+              width={0}
+              height="9"
+              rx="4"
+              fill={b.color}
+              fillOpacity="0.75"
+              initial={{ width: 0 }}
+              whileInView={{ width: (b.pct / 100) * maxW }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: 0.15 * i, ease: 'easeOut' }}
+            />
+            {/* Pct label */}
+            <text x="139" y={y + 7} fontSize="7" fill="#6b7280" textAnchor="end">{b.pct}%</text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
 // ── Floating geometric shapes (decorative) ──────────────────────────────────
 function FloatingShapes() {
   return (
@@ -298,14 +448,29 @@ export default function Landing() {
 
           <FadeUp delay={0.2}>
             <div className="glass-md rounded-2xl p-6 md:p-10 max-w-4xl mx-auto overflow-hidden">
-              {/* Mock dashboard screenshot replacement */}
+              {/* Live mini-charts */}
               <div className="grid grid-cols-3 gap-4 mb-6">
-                {['Skill Radar', 'Readiness', 'Gap Map'].map(t => (
-                  <div key={t} className="glass rounded-xl p-4 text-center">
-                    <div className="w-full h-20 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 mb-2" />
-                    <span className="text-xs text-gray-400">{t}</span>
+                {/* Skill Radar */}
+                <div className="glass rounded-xl p-3 text-center">
+                  <div className="w-full h-32">
+                    <MiniRadar />
                   </div>
-                ))}
+                  <span className="text-xs text-gray-400 mt-1 block">Skill Radar</span>
+                </div>
+                {/* Readiness Gauge */}
+                <div className="glass rounded-xl p-3 text-center">
+                  <div className="w-full h-32">
+                    <MiniGauge />
+                  </div>
+                  <span className="text-xs text-gray-400 mt-1 block">Readiness Score</span>
+                </div>
+                {/* Gap Map bars */}
+                <div className="glass rounded-xl p-3 text-center">
+                  <div className="w-full h-32">
+                    <MiniGapBars />
+                  </div>
+                  <span className="text-xs text-gray-400 mt-1 block">Gap Map</span>
+                </div>
               </div>
               <div className="flex items-center gap-4 justify-center text-xs text-gray-500">
                 <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500" /> Live Data</span>
