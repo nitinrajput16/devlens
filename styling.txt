@@ -1,0 +1,74 @@
+Act as an expert UI/CSS developer. I am building a "Creative 3D Portfolio" using HTML, CSS, and Three.js. I have already set up the base HTML, a Three.js background canvas (`#bg-canvas`), a custom cursor, a loading screen, and my foundational CSS variables (Dark mode with #0a0a0f background, purple/cyan/pink neon accents, 'Space Grotesk' for body font, and 'Syne' for display/headings).
+
+Please generate the remaining CSS for my `styles.css` file to style the layout and specific sections. Use modern CSS (Flexbox, CSS Grid, Glassmorphism, CSS variables) and ensure it's fully responsive. 
+
+Here are the specific requirements based on my HTML structure:
+
+1. Global & Background:
+- Make sure the `.main-content` sits above the `#bg-canvas`. The `#bg-canvas` should be `position: fixed`, top/left 0, `z-index: -1`, taking up 100vw/100vh.
+- Give `.section` classes a minimum height of `100vh` and standard padding (e.g., `var(--section-padding)`).
+
+2. Typography & Buttons:
+- Style `.text-gradient` and `.text-accent` using my variables (`--gradient-primary` and `--accent-cyan` or `--accent-primary`).
+- Style `.btn`, `.btn-primary`, and `.btn-outline`. They should have padding, border-radius, modern typography, and utilize my `--transition-med` variable. Add a glowing hover effect (`--shadow-glow`) for the `.btn-glow` inner element.
+
+3. Navigation (`.nav`):
+- `position: fixed`, top 0, 100% width. Use a glassmorphism effect (semi-transparent background with `backdrop-filter: blur(10px)`). 
+- Flexbox layout: space-between logo, links, and toggle.
+- Add hover effects for `.nav-link` (maybe a subtle underline animation or color change).
+- Style the hamburger menu (`.nav-toggle`) for mobile screens.
+
+4. Side Elements (`.side-social` & `.side-email`):
+- `position: fixed` to the bottom left and bottom right respectively.
+- Display as flex columns with a vertical `.social-line` at the bottom.
+- Add hover effects (translateY up, color change to accent) for the icons and the vertical email link.
+
+5. Hero Section (`.hero-section`):
+- Flexbox alignment. Large typography for `.hero-name` (using 'Syne' font).
+- Style `.scroll-indicator` as a small mouse/pill shape with a dot animating up and down (keyframes).
+
+6. About Section (`.about-section`):
+- Grid layout `grid-template-columns: 1fr 1fr;` for desktop.
+- Style the `.about-image-wrapper` with a creative border offset (`.about-image-border`) and dotted pattern (`.about-image-dots`), utilizing absolute positioning behind the main image placeholder.
+- Style `.about-stats` using flex/grid. Make `.stat-number` large and bold, with smaller muted `.stat-label`.
+
+7. Skills Section (`.skills-section`):
+- Use CSS Grid for the `.skills-grid` to display different categories (`Frontend`, `Backend`, `Tools`). Make the category cards have a slight background (`var(--bg-card)`) with a subtle border/glow on hover.
+- Style the `.skill-tag` elements like modern pills (border-radius, padding, background `var(--bg-secondary)`, margin). Add a hover state the pops the text color to the accent variables.
+
+8. Responsive Design (Media Queries):
+- Downscale typography sizes for `< 768px` and `< 480px`.
+- Turn the `.nav-links` into a slide-in mobile menu.
+- Hide `.side-social` and `.side-email` on smaller screens.
+- Change About and Skills grids to 1 column on mobile.
+
+Please output ONLY the CSS code to append to my existing file, ensuring it natively utilizes the variables already defined in my `:root` (e.g., `--bg-primary`, `--accent-primary`, `--transition-med`, `--font-display`, etc.).
+Act as an expert Frontend Developer. I am building a "Creative 3D Portfolio" and need the Vanilla JavaScript code for my `app.js` file to handle all the UI interactions, scroll animations, and DOM manipulation. I already have a separate `three-scene.js` handling the 3D canvas, so this script should strictly focus on the HTML overlays and interactive elements. 
+
+My HTML is already structured with specific IDs and data-attributes. Please generate clean, modern ES6+ JavaScript to handle the following requirements:
+
+1. Custom Cursor (`#cursor` and `#cursor-follower`):
+- Track the `mousemove` event to smoothly update the position (top/left or transform) of the cursor elements. Use requestAnimationFrame or slight lerping on the follower for a smooth trailing effect.
+- Add `mouseenter` and `mouseleave` event listeners to all `<a>`, `<button>`, and `.nav-toggle` elements to toggle an `.active` class on the cursor elements (which makes them expand/change color).
+
+2. Preloader (`#loader` and `#loader-bar-fill`):
+- Simulate a loading progress bar (`#loader-bar-fill`) from 0% to 100%. 
+- Once `window` triggers the `load` event (and the bar reaches 100%), fade out the `#loader` by adding a `.hidden` class, and then set its `display` to `none` after the transition completes.
+
+3. Mobile Navigation & Scroll State:
+- Select `#nav-toggle` and `#nav-links`. On toggle click, add/remove an `.active` or `.open` class to reveal the mobile menu and animate the hamburger span lines into an 'X'.
+- Listen to `window.addEventListener('scroll')`. If `window.scrollY > 50`, add a `.scrolled` class to `#nav` to give it a glassmorphism background and box-shadow.
+
+4. Active Nav Link Highlighting (Intersection Observer):
+- Use an `IntersectionObserver` to watch all `.section` elements.
+- When a section is intersecting the viewport (around 30-50% threshold), update the `.nav-link` elements so only the one matching the current section gets the `.active` class.
+
+5. Scroll Reveal Animations (`[data-animate]`):
+- I have elements with `data-animate="fade-up"`, `data-animate="fade-right"`, etc., and some with `data-delay="100"`.
+- Use a new `IntersectionObserver` for these. When an element enters the viewport, apply its inline delay via `style.transitionDelay` (if it has `data-delay`), and add an `.is-visible` or `.animated` class to trigger the CSS transition. Unobserve after revealing so it only animates once.
+
+6. Number Counters (`.stat-number` with `data-count`):
+- Use the IntersectionObserver to detect when the About section's `.stat-number` elements come into view.
+- When visible, animate their `innerText` from 0 up to their respective `data-count` value over a duration of 2 seconds.
+
+Please output the complete Vanilla JavaScript code inside an IIFE (Immediately Invoked Function Expression) or a `document.addEventListener("DOMContentLoaded")` block to prevent global scope pollution, and include clear comments.

@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #030014;
+  color: #e2e8f0;
+  overflow-x: hidden;
+}
+
+/* ── Animated starfield background ─────────────────────────────────────────── */
+.stars-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1.5px 1.5px at 20% 30%,  rgba(255,255,255,.6) 50%, transparent 100%),
+    radial-gradient(1px   1px   at 40% 70%,  rgba(255,255,255,.4) 50%, transparent 100%),
+    radial-gradient(1.2px 1.2px at 60% 20%,  rgba(255,255,255,.5) 50%, transparent 100%),
+    radial-gradient(1px   1px   at 80% 90%,  rgba(255,255,255,.3) 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 10% 80%,  rgba(255,255,255,.5) 50%, transparent 100%),
+    radial-gradient(1px   1px   at 70% 50%,  rgba(255,255,255,.35) 50%, transparent 100%),
+    radial-gradient(1.3px 1.3px at 50% 40%,  rgba(255,255,255,.45) 50%, transparent 100%),
+    radial-gradient(1px   1px   at 90% 10%,  rgba(255,255,255,.3) 50%, transparent 100%);
+  background-size: 300px 300px, 400px 400px, 350px 350px, 500px 500px,
+                   450px 450px, 380px 380px, 420px 420px, 550px 550px;
+  animation: drift 90s linear infinite;
+}
+@keyframes drift {
+  to { background-position: 300px 300px, -400px 200px, 350px -100px, -200px 500px,
+                              150px -300px, -250px 180px, 420px 220px, -300px -200px; }
+}
+
+/* ── Glowing orbs ──────────────────────────────────────────────────────────── */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  opacity: .18;
+  filter: blur(100px);
+  pointer-events: none;
+}
+.glow-purple  { background: #7c3aed; width: 600px; height: 600px; }
+.glow-blue    { background: #3b82f6; width: 500px; height: 500px; }
+.glow-pink    { background: #ec4899; width: 400px; height: 400px; }
+
+/* ── Glassmorphism card ────────────────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.glass-md {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+.glass-strong {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ── Glass input ───────────────────────────────────────────────────────────── */
+.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color .2s, box-shadow .2s;
+}
+.glass-input:focus {
+  outline: none;
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+/* ── Gradient text ─────────────────────────────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Shimmer button ────────────────────────────────────────────────────────── */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.12) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: shimmer 3s ease-in-out infinite;
+}
+@keyframes shimmer { 60%,100% { transform: translateX(100%); } }
+
+/* ── Floating animation ────────────────────────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-16px); }
+}
+.animate-float { animation: float 6s ease-in-out infinite; }
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.5); }

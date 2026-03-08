@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head><title>GitHub Auth</title></head>
+<body>
+<script>
+  // GitHub OAuth redirects back with ?code=...
+  const params = new URLSearchParams(window.location.search)
+  const code = params.get('code')
+  if (code && window.opener) {
+    window.opener.postMessage({ type: 'github-auth', code }, window.location.origin)
+  }
+  window.close()
+</script>
+</body>
+</html>

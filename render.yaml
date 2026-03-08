@@ -1,0 +1,81 @@
+# render.yaml — Render.com blueprint for DevLens
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Two services:
+#   devlens-api    → Python/FastAPI web service (backend)
+#   devlens-web    → Static site (React/Vite frontend)
+#
+# After deploying, set all secret environment variables in the Render dashboard
+# under each service → Environment. The keys listed here with `sync: false` are
+# placeholders that MUST be filled in manually.
+
+services:
+  # ── Backend ──────────────────────────────────────────────────────────────
+  - type: web
+    name: devlens-api
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      # Render injects PORT automatically — leave it absent here
+      - key: MONGODB_URI
+        sync: false          # set in dashboard
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: STACKOVERFLOW_KEY
+        sync: false
+      - key: KAGGLE_USERNAME
+        sync: false
+      - key: KAGGLE_KEY
+        sync: false
+      - key: DEVTO_API_KEY
+        sync: false
+      - key: JSEARCH_API_KEY
+        sync: false
+      - key: OLLAMA_HOST
+        value: https://ollama.com
+      - key: OLLAMA_API_KEY
+        sync: false
+      - key: OLLAMA_MODEL
+        value: gpt-oss:20b-cloud
+      - key: JWT_SECRET
+        sync: false          # generate: python -c "import secrets; print(secrets.token_hex(32))"
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      # Set to the Render static site URL once deployed, e.g. https://devlens.onrender.com
+      - key: ALLOWED_ORIGINS
+        value: http://localhost:5173   # update after frontend is deployed
+
+  # ── Frontend ─────────────────────────────────────────────────────────────
+  - type: web
+    name: devlens-web
+    runtime: static
+    region: oregon
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    routes:
+      # SPA fallback — all paths serve index.html so React Router works
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # Point the frontend at the deployed backend.
+      # Replace with your actual devlens-api Render URL:
+      - key: VITE_API_URL
+        value: https://devlens-api.onrender.com   # update after backend is deployed

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>Google Auth</title></head>
+<body>
+<script>
+  // Google implicit flow returns tokens in the URL hash
+  const hash = window.location.hash.substring(1)
+  const params = new URLSearchParams(hash)
+  const id_token = params.get('id_token')
+  if (id_token && window.opener) {
+    window.opener.postMessage({ type: 'google-auth', id_token }, window.location.origin)
+  }
+  window.close()
+</script>
+</body>
+</html>
