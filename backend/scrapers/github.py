@@ -175,23 +175,47 @@ def _recency_weight(pushed_at: datetime | None) -> int:
     return 1
 
 
+# Dep files to try first (most common ecosystems) — avoids scanning all 12 files per repo
+_PRIORITY_DEP_FILES = ["package.json", "requirements.txt", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml"]
+
+
 def _detect_frameworks(repo) -> list[str]:
-    """Scan dependency files in a repo for known framework names.
-    Also infers Node.js when package.json contains server-side signals.
-    """
+    """Scan dependency files — stops after finding the first matching file to minimise API calls."""
     found: set[str] = set()
     pkg_json_raw: str | None = None
 
-    for filename, patterns in _FRAMEWORK_PATTERNS.items():
+    # Try common dep files first, stop on first hit
+    tried: set[str] = set()
+    for filename in _PRIORITY_DEP_FILES:
+        if filename not in _FRAMEWORK_PATTERNS:
+            continue
+        tried.add(filename)
         try:
             raw = repo.get_contents(filename).decoded_content.decode("utf-8", errors="ignore").lower()
             if filename == "package.json":
                 pkg_json_raw = raw
-            for key, canonical in patterns.items():
+            for key, canonical in _FRAMEWORK_PATTERNS[filename].items():
                 if key.lower() in raw:
                     found.add(canonical)
+            break  # Found a dep file — no need to try others
         except Exception:
             pass
+
+    # If no priority file matched, try remaining (stop on first hit)
+    if not found:
+        for filename, patterns in _FRAMEWORK_PATTERNS.items():
+            if filename in tried:
+                continue
+            try:
+                raw = repo.get_contents(filename).decoded_content.decode("utf-8", errors="ignore").lower()
+                if filename == "package.json":
+                    pkg_json_raw = raw
+                for key, canonical in patterns.items():
+                    if key.lower() in raw:
+                        found.add(canonical)
+                break  # Stop after first found file
+            except Exception:
+                pass
 
     # ── Node.js inference from package.json ───────────────────────────────
     if pkg_json_raw is not None:
@@ -213,14 +237,14 @@ def _detect_frameworks(repo) -> list[str]:
 
 
 def _commit_streak(repos: list) -> int:
-    """Longest streak of consecutive days with at least one commit (across top 10 repos)."""
+    """Longest streak of consecutive days with at least one commit (top 5 repos, 20 commits each)."""
     commit_days: set = set()
-    for repo in repos[:10]:
+    for repo in repos[:5]:
         if repo.size == 0:
             continue
         try:
             for i, commit in enumerate(repo.get_commits()):
-                if i >= 50:
+                if i >= 20:
                     break
                 d = commit.commit.author.date
                 if d:
@@ -246,9 +270,9 @@ def _commit_streak(repos: list) -> int:
 
 
 def _test_ratio(repos: list) -> float:
-    """Ratio of test/spec files to total files across up to 5 repos."""
+    """Ratio of test/spec files to total files across up to 3 repos."""
     total = test_count = 0
-    for repo in repos[:5]:
+    for repo in repos[:3]:
         if repo.size == 0:
             continue
         try:
@@ -279,10 +303,10 @@ def _scrape_github_sync(github_url: str) -> dict:
             "error": f"GitHub user '{username}' not found or API limit exceeded.",
         }
 
-    # Fetch up to 30 most-recently-updated owned repos
+    # Fetch up to 15 most-recently-updated owned repos (halved for speed)
     all_repos: list = []
     for i, r in enumerate(user.get_repos(type="owner", sort="updated")):
-        if i >= 30:
+        if i >= 15:
             break
         all_repos.append(r)
 

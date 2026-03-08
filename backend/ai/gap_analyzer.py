@@ -8,7 +8,6 @@ invalid JSON or schema mismatch before falling back to an empty report.
 
 import os
 import json
-import time
 from ollama import Client
 
 from schemas import UnifiedDeveloperProfile, GapReport
@@ -41,6 +40,7 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gpt-oss:20b-cloud")
 _ollama = Client(
     host=OLLAMA_HOST,
     headers={"Authorization": "Bearer " + OLLAMA_API_KEY} if OLLAMA_API_KEY else {},
+    timeout=60,
 )
 
 GAP_SYSTEM_PROMPT = (
@@ -131,9 +131,6 @@ def analyse_gap(
             ]
         except (json.JSONDecodeError, KeyError):
             pass
-        if attempt < max_retries - 1:
-            time.sleep(1)
-
     # Build a normalised set of skill names the developer actually has
     known_skill_names: set[str] = set()
     for s in profile.skills:

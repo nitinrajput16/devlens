@@ -17,6 +17,7 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gpt-oss:20b-cloud")
 _ollama = Client(
     host=OLLAMA_HOST,
     headers={"Authorization": "Bearer " + OLLAMA_API_KEY} if OLLAMA_API_KEY else {},
+    timeout=60,
 )
 
 ROADMAP_SYSTEM_PROMPT = (

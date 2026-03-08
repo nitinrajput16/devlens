@@ -162,7 +162,8 @@ async def run_analysis_pipeline(session_id: str, request: AnalyseRequest):
             {"$set": {"status": "analysing", "progress.fusion": "running"}},
         )
 
-        unified_profile = fuse_profiles(platform_signals)
+        loop = asyncio.get_event_loop()
+        unified_profile = await loop.run_in_executor(None, fuse_profiles, platform_signals)
 
         await sessions_collection.update_one(
             {"session_id": session_id},
