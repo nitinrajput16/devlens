@@ -54,7 +54,7 @@ export default function Navbar() {
             <a href="/#features" className="hover:text-white transition">Features</a>
             <a href="/#visualize" className="hover:text-white transition">Visualize</a>
             {user && (
-              <button onClick={() => navigate('/dashboard')} className="hover:text-white transition">Dashboard</button>
+              <button onClick={() => navigate('/dashboard')} className="hover:text-white transition cursor-pointer">Dashboard</button>
             )}
           </div>
 
@@ -82,7 +82,7 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -6, scale: 0.97 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-52 glass-strong rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
+                      className="absolute right-0 mt-4 w-52 bg-black/50 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
                     >
                       {/* User info header */}
                       <div className="px-4 py-3 border-b border-white/10">
