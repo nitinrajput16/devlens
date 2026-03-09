@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Eye, Cpu, Map, Users, BarChart3, TrendingUp, Sparkles, Hexagon, Github, Twitter, Linkedin } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -302,12 +303,12 @@ export default function Landing() {
             <FadeUp delay={0.3}>
               <div className="flex flex-wrap gap-4">
                 {user ? (
-                  <a
-                    href="/dashboard"
+                  <Link
+                    to="/dashboard"
                     className="flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 font-semibold hover:opacity-90 transition btn-shimmer"
                   >
                     Start Analysis <ArrowRight size={18} />
-                  </a>
+                  </Link>
                 ) : (
                   <button
                     onClick={() => setAuthOpen(true)}
